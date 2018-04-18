@@ -1,0 +1,2 @@
+# Sqoop
+sample sqoop script

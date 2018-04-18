@@ -1,0 +1,74 @@
+--List databases
+sqoop list-databases --connect jdbc:mysql://quickstart.cloudera:3306/ --username root --password cloudera
+
+--List tables
+sqoop list-tables --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera
+Here oct2017 is the name of the database
+
+--Sqoop Import the employee table
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees
+
+--Sqoop import using direct
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees –direct
+
+--Sqoop import setting the number of mappers to 2
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees -m 2
+
+--what if we don't have the primary key while importing table? we have to use --split-by or set the mappers to 1
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees -m 1
+
+or
+
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees –split-by emp_no
+
+The best way is to use –split-by because it uses the concept of parallelism and makes the execution faster. (If we use -m 1, it has only 1 mapper it takes much time for execution)
+
+--Import all the tables
+sqoop import-all-tables  --connect jdbc:mysql://quickstart.cloudera:3306/retail_db  --username root --password cloudera
+
+--Import the table using the target path
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --query 'select EMP_NO,birth_date,first_name,last_name,gender,hire_date from employees where EMP_NO>114 and $CONDITIONS' --split-by EMP_NO --target-dir /user/training/sqoop_target_import
+
+--Import and compress the data
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --query 'select EMP_NO,birth_date,first_name,last_name,gender,hire_date from employees where EMP_NO>114 and $CONDITIONS'  -z --split-by EMP_NO --target-dir /user/training/sqoop_target_import1
+
+Use text or gunzip editor to view the content of .gz files 
+
+--Sqoop eval 
+sqoop eval --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --query "select count(*) from employees"
+
+The use of eval is to perform any DML(Data Manipulation Language) into the table
+
+--Sqoop eval
+sqoop eval --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera -e "insert into employees values(5500000,'1977-08-8','Mouse','Mickey','M','1992-04-12')"
+
+--Sqoop incremental pull
+sqoop import –connect jdbc:mysql://quickstart.cloudera:3306/oct2017 –table employees –username root –password cloudera –check-column emp_no --incremental append –last-value 4
+
+--Sqoop export
+sqoop export --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees_export -m 4 --export-dir /user/training/sqoop_target_import
+
+Temp table
+Perm table = insert into perm select * from temp
+First data is loaded into temp and then loaded to perm table and then clear the data in temp
+
+sqoop export --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees_export --staging-table employees_exp_stg --clear-staging-table -m 4 --export-dir /user/training/sqoop_target_import
+
+--Update the data on mysql using sqoop
+sqoop export --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees_export --direct --update-key emp_no --update-mode updateonly --export-dir /user/training/sqoop_target_import
+
+--Update the data on IBM DB2 using sqoop
+sqoop export --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees_export --direct --update-key emp_no --update-mode upsert --export-dir /user/training/sqoop_target_import
+
+In db2 we have Upsert = update + insert where newly added records will also be reflected in the database 
+
+--Import from rdbms to hive
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees --hive-table oct2017.employees --create-hive-table --hive-import --hive-home /usr/lib/hive --split-by EMP_NO
+
+--Export from hive to rdbms
+sqoop export --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --table employees_exp_stg --export-dir /user/hive/warehouse/oct2017.db/employees -m 4 --input-fields-terminated-by '\001'
+
+Here 
+/user/hive/warehouse/oct2017.db/employees       is the hive table
+input-fields-terminated-by '\001'               delimiter in hive is ctrla (ascii value is 001)
+

@@ -1,0 +1,516 @@
+sqoop
+
+itversity lab
+
+mysql -u retail_dba -h nn01.itversity.com -p
+itversity
+============================================================
+
+mysql -u retail_user -h ms.itversity.com -p
+itversity
+
+
+jdbc jar is found in the following location
+cd /usr/hdp/current/sqoop-client/lib
+ls -lrt
+
+
+ssh -i /home/nikhil/.ssh/itversity nikhilvemula@gw02.itversity.com
+
+sqoop help
+
+
+
+To list databases
+==================
+
+sqoop list-databases \
+  --connect jdbc:mysql://ms.itversity.com:3306 \
+  --username retail_user \
+  --password itversity
+
+or
+
+sqoop list-databases \
+  --connect jdbc:mysql://ms.itversity.com:3306 \
+  --username retail_user \
+  -P
+
+To list the tables
+======================
+
+sqoop list-tables \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity
+
+
+Sqoop eval (SELECT, INSERT, UPDATE, DELETE)
+=============================================
+
+sqoop eval \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --query "SELECT * FROM orders LIMIT 10"
+
+or -e instead --query
+
+sqoop eval \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  -e "SELECT * FROM orders LIMIT 10"
+
+
+sqoop eval \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --query "INSERT INTO orders VALUES(1000, "\2018-05-31 10:55:50.0\", 10000, "\DUMMY\")"
+
+or 
+
+we can use single quotes
+
+sqoop eval \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --query "INSERT INTO orders VALUES(1000, '2018-05-31 10:55:50.0', 10000, 'DUMMY')"
+
+sqoop eval \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_export \
+  --username retail_user \
+  --password itversity \
+  --query "CREATE TABLE dummy (i INT)"
+
+sqoop eval \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_export \
+  --username retail_user \
+  --password itversity \
+  --query "INSERT INTO dummy VALUES(i INT)"
+
+
+Sqoop Import
+=============
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_export \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --target-dir /user/nikhilvemula/sqoop_import/retail_db/order_items
+
+or
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db
+
+
+the output is present in the following hdfs location
+
+hadoop fs -ls /user/nikhilvemula/sqoop_import/retail_db
+
+drwxr-xr-x   - nikhilvemula hdfs          0 2018-05-21 11:12 /user/nikhilvemula/sqoop_import/retail_db/order_items
+
+
+
+warehouse directory
+base directory under which data will be imported.In which subdirectory is created in the name of table name
+
+
+target directory
+files will be directly created under this directory
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --num-mappers 1 \
+  --delete-target-dir
+
+if we encounter error as file already exists, then we use --delete-target-dir
+It is used to overwrite existing target directory
+it is of boolean type
+
+
+--append and --delete-target-dir are mutually exclusive
+
+--append is used to add data to the existing target directory
+It is of type boolean
+Typically append is used to get the value of Delta
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --num-mappers 1 \
+  --append
+
+
+
+Split by
+==========
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items_nopk \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db 
+
+
+18/05/21 11:49:38 ERROR tool.ImportTool: Error during import: No primary key could be found for table order_items_nopk. Please specify one with --split-by or perform a sequential import with '-m 1'.
+
+Where table doesn't have primary keys then we use --split-by and specify the column name
+
+// Things to remember for split-by
+// column should be indexed
+// select * from order_items_nopk where order_item_id >= 1 and order_item_id < 43049 (values in the field should be sparse)
+// also often itshould be sequence generated or evenly incremented
+// it should not have not null values 
+
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items_nopk \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --split-by order_item_order_id
+
+If we want to split by non numeric field we should add the following property
+
+
+sqoop import \
+  -Dorg.apache.sqoop.splitter.allow_text_splitter=true \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items_nopk \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --split-by order_status
+
+
+If there is no primary key auto reset to 1
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items_nopk \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --autoreset-to-one-mapper
+
+
+Sqoop File Formats
+====================
+text file(default)
+sequence file
+avro file
+parquet file
+
+
+--as-textfile
+--as-sequencefile (binary data)
+--as-avrodatafile (binary json format)
+--as-parquetfile  (columanr file format) became popular with MPP like greenplum, vertica
+
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --num-mappers 2 \
+  --as-sequencefile
+
+
+Sqoop Import - compression
+============================
+Gzip (default)
+Deflate
+Snappy
+LZO
+Bzip
+
+
+
+-z, --compress        (to compress normally)
+--compression-codec   (to compress using a particular compression technique) (default is gzip)
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --num-mappers 2 \
+  --as-textfile \
+  --compress
+
+
+cd /etc/hadoop/conf
+here we have core-site.xml file
+search for /codec
+this shows what algorithms are enabled 
+
+org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.SnappyCodec
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --num-mappers 2 \
+  --as-textfile \
+  --compression-codec org.apache.hadoop.io.compress.SnappyCodec
+
+
+Transformations and Filtering in Sqoop
+=========================================
+columns  - used to get the subset
+query
+
+table and/or columns is mutually exclusive with query
+
+Query is used to perform certain transformations on data before loading to HDFS
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --columns order_item_order_id,order_item_id,order_item_subtotal \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --num-mappers 2
+
+
+
+Delimiters and Handling Null values
+====================================
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/hr_db \
+  --username hr_user \
+  --password itversity \
+  --table employees \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/hr_db
+
+
+--null-string         (if you are trying to overwrite the default behaviour of a string value)
+--null-non-string     if you are trying to overwrite the default behaviour of a numeric value)
+
+
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/hr_db \
+  --username hr_user \
+  --password itversity \
+  --table employees \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/hr_db \
+  --null-non-string -1 \
+  --fields-terminated-by "\t" \
+  --lines-terminated-by ":"
+
+
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/hr_db \
+  --username hr_user \
+  --password itversity \
+  --table employees \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/hr_db \
+  --null-non-string -1 \
+  --fields-terminated-by "/001" \
+  --lines-terminated-by ":"
+
+
+Sqoop Incremental Imports
+=============================
+we need to capture the delta and load only the modified records
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --target-dir /user/nikhilvemula/sqoop_import/retail_db/orders \
+  --num-mappers 2 \
+  --query "SELECT * FROM orders WHERE \$CONDITIONS and order_date LIKE '2013-%'" \
+  --split-by order_id
+
+
+capturing data for 2014 jan
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --target-dir /user/nikhilvemula/sqoop_import/retail_db/orders \
+  --num-mappers 2 \
+  --query "SELECT * FROM orders WHERE \$CONDITIONS and order_date LIKE '2014-01-%'" \
+  --split-by order_id \
+  --append
+
+we can also use where clause for incremental import
+the advantage of using where clause is we can use table also
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --target-dir /user/nikhilvemula/sqoop_import/retail_db/orders \
+  --num-mappers 2 \
+  --table orders \
+  --where "order_date like '2014-02-%'" \
+  --append
+
+
+query, where clauses (we actually dont know to what extent we already copied the data 
+to check the values we need to eval before and after the import )
+
+
+to overcome this we use,
+--check-column
+--incremntal  (which supports append and lastmodified)
+--last-value
+
+
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --target-dir /user/nikhilvemula/sqoop_import/retail_db/orders \
+  --num-mappers 2 \
+  --table orders \
+  --check-column order_date \
+  --incremental append \
+  --last-value '2014-02-28'
+
+
+
+Importing Data - Hive
+======================
+Always first create database in hive
+
+create database nvemula_sqoop_import;
+
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --hive-import \
+  --hive-database nvemula_sqoop_import \
+  --hive-table order_items \
+  --num-mappers 2
+
+
+Hive import managing tables
+============================
+Load the data first
+	1.append to the existing data
+	2.overwrite the data
+	3.raise exception and error out
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --hive-import \
+  --hive-database nvemula_sqoop_import \
+  --hive-table order_items \
+  --num-mappers 2
+
+If we run the above sqoop import hive query again the data is appended (by default) to the existing data.
+
+
+Now overwrite the data to the existing table
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --hive-import \
+  --hive-database nvemula_sqoop_import \
+  --hive-table order_items \
+  --hive-overwrite \
+  --num-mappers 2
+
+If the table already exists it should fail
+
+
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table order_items \
+  --hive-import \
+  --hive-database nvemula_sqoop_import \
+  --hive-table order_items \
+  --create-hive-table \
+  --num-mappers 2
+
+It throws the error after sqoop import is done and stagging location 
+
+ AlreadyExistsException(message:Table order_items already exists)
+
+ If the sqoop import fails the imported data is present in the default hdfs location /user/nikhilvemula  that is called as stagging location.
+
+ If the sqoop import is successful, the data will be deleted in the staging location.
+
+
+ Now if we run the overwrite command, it throws error as file already exists because the previous one is present in the staging location.
+
+
+
+ import all tables
+ ========================
+ We have to use the warehouse location
+ better to use autoreset-to-one-mapper
+ cannot specify arguments such as --query, --cols, --where, 
+ Incremental import not possible
+
+ sqoop import-all-tables \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db \
+  --autoreset-to-one-mapper
+
+
+
+Sqoop-Export
+================
+

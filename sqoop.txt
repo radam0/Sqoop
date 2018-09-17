@@ -1,0 +1,413 @@
+sqoop
+
+itversity lab
+
+mysql -u retail_dba -h nn01.itversity.com -p
+itversity
+
+vm
+
+[cloudera@quickstart ~]$ mysql -uroot -pcloudera
+ mysql -p root
+
+
+sqoop list-databases --connect jdbc:mysql://ms.itversity.com/retail_db --username retail_user 
+--password itversity --query "select count(1) from orders"
+
+sqoop list-databases --connect jdbc:mysql://ms.itversity.com/retail_db --username retail_user 
+--password itversity 
+
+sqoop list-tables --connect jdbc:mysql://ms.itversity.com/retail_db --username retail_user 
+--password itversity
+
+
+customer_id | customer_fname | customer_lname | customer_email | customer_password | customer_street    | customer_city | customer_state | customer_zipcode
+
+
+=================================================================================
+CREATE TABLE customers1 (
+customer_id int(11) NOT NULL,
+customer_fname varchar(14) NOT NULL,
+customer_lname varchar(16) NOT NULL,
+customer_email varchar(25) NOT NULL,
+customer_password varchar(25) NOT NULL,
+customer_street varchar(25) NOT NULL,
+customer_city varchar(25) NOT NULL,
+customer_state varchar(25) NOT NULL,
+customer_zipcode varchar(25) NOT NULL,
+PRIMARY KEY(customer_id)
+);
+
+
+
+
+
+
+
+
+
+
+CREATE TABLE employees (
+emp_no int(11) NOT NULL,
+birth_date date NOT NULL,
+first_name varchar(14) NOT NULL,
+last_name varchar(16) NOT NULL,
+gender enum('M','F') NOT NULL,
+hire_date date NOT NULL,
+PRIMARY KEY(emp_no)
+);
+
+
+CREATE TABLE employees_export (
+emp_no int(11) NOT NULL,
+birth_date date NOT NULL,
+first_name varchar(14) NOT NULL,
+last_name varchar(16) NOT NULL,
+gender enum('M','F') NOT NULL,
+hire_date date NOT NULL,
+PRIMARY KEY(emp_no)
+);
+
+CREATE TABLE employees_exp_stg (
+emp_no int(11) NOT NULL,
+birth_date date NOT NULL,
+first_name varchar(14) NOT NULL,
+last_name varchar(16) NOT NULL,
+gender enum('M','F') NOT NULL,
+hire_date date NOT NULL
+);
+
+
+
+commit; 				// used for permanent changes
+
+
+
+insert into employees values(111, '1989-08-01', 'abc', 'aaa', 'M', '2010-01-11');
+insert into employees values(112, '1989-09-01', 'bbb', 'sss', 'M', '2010-01-12');
+insert into employees values(113, '1989-07-01', 'ccc', 'xxx', 'M', '2010-01-13');
+insert into employees values(114, '1989-06-01', 'ddd', 'fff', 'M', '2010-01-14');
+insert into employees values(115, '1989-05-01', 'eee', 'zzz', 'M', '2010-01-15');
+insert into employees values(116, '1989-04-01', 'fff', 'rrr', 'M', '2010-01-16');
+insert into employees values(117, '1989-08-02', 'ggg', 'mmm', 'F', '2010-01-11');
+insert into employees values(118, '1989-08-03', 'hhh', 'nnn', 'F', '2010-02-11');
+insert into employees values(119, '1989-08-04', 'iii', 'ooo', 'F', '2010-03-11');
+insert into employees values(120, '1989-08-05', 'jjj', 'ppp', 'F', '2010-04-11');
+insert into employees values(121, '1989-08-06', 'kkk', 'ttt', 'F', '2010-05-11');
+insert into employees values(122, '1989-08-07', 'lll', 'uuu', 'F', '2010-06-11');
+
+
+commit;
+
+
+mysql> insert into employees_exp_stg select * from employees;
+
+mysql>commit;
+
+
+
+
+
+=================================================================
+
+1
+sqoop import \
+ --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+ --username retail_user \
+ --password itversity \
+ --table orders \
+ --target-dir /user/nikhilvemula/problem1/solution/
+
+2
+SELECT     customer_lname, customer_fname
+FROM       customers
+LEFT JOIN  orders ON customers.customer_id = orders.order_customer_id
+WHERE      orders.order_customer_id IS NULL
+ORDER BY   customer_lname, customer_fname;SELECT     customer_lname, customer_fname
+FROM       customers
+LEFT JOIN  orders ON customers.customer_id = orders.order_customer_id
+WHERE      orders.order_customer_id IS NULL
+ORDER BY   customer_lname, customer_fname;
+
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --query 'SELECT customer_lname, customer_fname FROM customers LEFT JOIN  orders ON 
+  customers.customer_id = orders.order_customer_id WHERE orders.order_customer_id IS NULL
+  ORDER BY   customer_lname, customer_fname and $CONDITIONS'\
+  --target-dir /user/nikhilvemula/problem2/solution/ \
+  --m 1
+
+
+================================
+6
+
+SELECT * FROM customers WHERE customer_state = 'TX';
+
+SELECT customer_id,COUNT(order_id)
+FROM  customers ,orders
+WHERE customer_state='TX'
+GROUP BY customer_id;
+
+================================
+15
+
+sqoop import \
+ --connect jdbc:mysql://ms.itversity.com:3306/h1b_db \
+ --username h1b_user \
+ --password itversity \
+ --table h1b_data \
+ --target-dir /user/nikhilvemula/problem15/solution \
+ --as-avrodatafile
+
+
+=============================================================
+16
+
+CREATE TABLE NYSEdata(stockticker STRING,
+transactiondate DATE,
+openprice DOUBLE,
+highprice DOUBLE,
+closeprice DOUBLE,
+volume INT)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LOCATION '/public/nyse/' ;
+
+===================================================
+20
+
+sqoop import \
+ --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+ --username retail_user \
+ --password itversity \
+ --table orders \
+ --target-dir /user/nikhilvemula/problem20/solution 
+
+
+==============================
+
+
+
+
+
+
+
+
+
+
+
+
+================================================================================================================================================
+																		hortonworks
+================================================================================================================================================
+
+To connect to sql
+
+mysql -u retail_dba -p
+hadoop
+
+
+
+
+
+=================================================================================================================================================																		cloudera
+=================================================================================================================================================
+
+sqoop reference
+https://github.com/dgadiraju/code/blob/master/hadoop/edw/cloudera/sqoop/sqoop_demo.txt
+
+
+To connect to sql
+
+mysql -u retail_dba -p
+cloudera
+
+To list the databases
+
+sqoop list-databases \
+ --connect jdbc:mysql://quickstart.cloudera:3306 \
+ --username retail_dba \
+ --password cloudera
+
+
+To list the tables
+
+sqoop list-tables \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera
+
+
+To evaluate the query
+
+sqoop eval \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --query "select * from departments"
+
+
+sqoop eval \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --query "select count(1) from departments"
+
+sqoop eval \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --query "INSERT INTO departments VALUE (8000, 'TESTING')"
+
+
+To import all the tables
+
+sqoop import-all-tables \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ -m 12 \
+ -as-avrodatafile \
+ --warehouse-dir=/user/cloudera/sqoop_import
+
+
+Importing all tables to hive (RDBMS-HIVE)
+
+sqoop import-all-tables \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ -m 1 \
+ --hive-import \
+ --hive-overwrite \
+ --create-hive-table \
+ --hive-database sqoop_import 
+
+
+Basic Import to a target directory
+
+sqoop import \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --table departments \
+ --target-dir /user/cloudera/departments
+
+
+
+
+===========================================
+incremental pull
+=================================
+
+sqoop eval \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --query "INSERT INTO departments VALUE (8000, 'TESTING')"
+
+sqoop eval \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --query "select * from departments"
+
+
+ output
+ --------------------------------------
+| department_id | department_name      | 
+--------------------------------------
+| 2           | Fitness              | 
+| 3           | Footwear             | 
+| 4           | Apparel              | 
+| 5           | Golf                 | 
+| 6           | Outdoors             | 
+| 7           | Fan Shop             | 
+| 8000        | TESTING              | 
+--------------------------------------
+
+hdfs location /user/cloudera/sqoop_import/departments
+
+actually when we imported from sqoop we have only 6 records
+
+
+
+ 2           Fitness              
+ 3           Footwear              
+ 4           Apparel               
+ 5           Golf                  
+ 6           Outdoors              
+ 7           Fan Shop            
+
+here the last value of the import is 7
+Now we have to perform incremental pull  
+ 
+
+
+=====================
+one way is using WHERE condition. This is not a good practise
+
+
+sqoop import \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --table departments \
+ --target-dir /user/cloudera/sqoop_import \
+ --append \
+ --where "department_id > 7"
+
+
+hadoop fs -ls /user/cloudera/dqoop_import/departments/part*
+
+ 2           Fitness              
+ 3           Footwear              
+ 4           Apparel               
+ 5           Golf                  
+ 6           Outdoors              
+ 7           Fan Shop  
+ 8000		 TESTING
+
+
+
+==============================
+another way is to use incremental append is check-column, last value
+
+
+sqoop import \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --table departments \
+ --target-dir /user/cloudera/sqoop_import \
+ --append \
+ --check-column "department_id" \
+ --incremental append \
+ --last-value 7 
+
+=============================================================
+Export
+==================================================================\
+Before exporting to rdbms, create a table in mysql
+
+mysql -u retail_dba -p
+cloudera
+
+use retail_db;
+
+create table order_items_export as select * from order_items where 1=2;   //create only table not the data that is the reason we have given 1=2
+
+
+sqoop export \
+ --connect jdbc:mysql://quickstart.cloudera:3306/retail_db \
+ --username retail_dba \
+ --password cloudera \
+ --table order_items_export \
+ --export-dir /user/cloudera/sqoop_import/order_items 
+
+
+
+
+

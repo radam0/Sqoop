@@ -1,0 +1,61 @@
+To convert from lower case to upper case the predefined sets in tr can be used.
+
+$cat greekfile
+Output:
+
+WELCOME TO 
+GeeksforGeeks
+$cat greekfile | tr “[a-z]” “[A-Z]”
+Output:
+
+WELCOME TO
+GEEKSFORGEEKS
+or
+
+$cat geekfile | tr “[:lower:]” “[:upper:]”
+Output:
+
+WELCOME TO
+GEEKSFORGEEKS
+
+
+2. The grep filter searches a file for a particular pattern of characters, and displays all lines that contain that pattern. The pattern that is searched in the file is referred to as the regular expression (grep stands for globally search for regular expression and print out).
+Syntax:
+
+grep [options] pattern [files]
+Options Description
+-c : This prints only a count of the lines that match a pattern
+-h : Display the matched lines, but do not display the filenames.
+-i : Ignores, case for matching
+-l : Displays list of a filenames only.
+-n : Display the matched lines and their line numbers.
+-v : This prints out all the lines that do not matches the pattern
+-e exp : Specifies expression with this option. Can use multiple times.
+-f file : Takes patterns from file, one per line.
+-E : Treats pattern as an extended regular expression (ERE)
+-w : Match whole word
+-o : Print only the matched parts of a matching line,
+ with each such part on a separate output line.
+ 
+ 3.The wc (word count) command in Unix/Linux operating systems is used to find out number of newline count, word count, byte and characters count in a files specified by the file arguments. The syntax of wc command as shown below.
+
+# wc [options] filenames
+
+wc -l : Prints the number of lines in a file.
+wc -w : prints the number of words in a file.
+wc -c : Displays the count of bytes in a file.
+wc -m : prints the count of characters from a file.
+wc -L : prints only the length of the longest line in a file.
+
+[root@tecmint ~]# wc -l tecmint.txt
+12 tecmint.txt
+
+If (null string) property is not included during sqoop import, then NULLs are stored as [blank for integer columns] and [blank for string columns] in HDFS. 2.If the HIVE table on top of HDFS is queried, we would see [NULL for integer column] and [blank for String columns]
+If the (--null-string '\N') property is included during sqoop import, then NULLs are stored as ['\N' for both integer and string columns].
+If the HIVE table on top of HDFS is queried, we would see [NULL for both integer and string columns not '\N']
+
+
+https://www.computerhope.com/unix/used.htm
+
+
+

@@ -58,4 +58,21 @@ If the HIVE table on top of HDFS is queried, we would see [NULL for both integer
 https://www.computerhope.com/unix/used.htm
 
 
+Import and compress the data
+------------------------------
+
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --query 'select EMP_NO,birth_date,first_name,last_name,gender,hire_date from employees where EMP_NO>114 and $CONDITIONS'  -z --split-by EMP_NO --target-dir /user/training/sqoop_target_import1
+
+Importing to a target path
+If we use –query we must definitely mention –split-by column name
+
+sqoop import --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 --username root --password cloudera --query 'select EMP_NO,birth_date,first_name,last_name,gender,hire_date from employees where EMP_NO>114 and $CONDITIONS' --split-by EMP_NO --target-dir /user/training/sqoop_target_import
+
+sqoop eval --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 \
+> --username root \
+> --password cloudera \
+> --query "select count(*) from employees"
+
+
+
 

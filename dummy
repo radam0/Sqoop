@@ -74,5 +74,35 @@ sqoop eval --connect jdbc:mysql://quickstart.cloudera:3306/oct2017 \
 > --query "select count(*) from employees"
 
 
+@Geoffrey Shelton Okot 
+sqoop import --connect "jdbc:sqlserver://xxxxx:1433;database=xxxxxx;username=xxxxxx;password=xxxxx" --table <table> --hive-import --hive-database <DBname> --incremental append --check-column <name> --last-value 3 -m 1
+
+http://www.hadooptechs.com/sqoop/sqoop-incremental-import-mysql-to-hive
+
+https://acadgild.com/blog/sqoop-tutorial-incremental-imports
+
+https://stackoverflow.com/questions/22969342/sqoop-incremental-import
+
+We can use Sqoop incremental import command with “-merge-key” option for updating the records in an already imported Hive table.
+
+sqoop import --connect jdbc:mysql://localhost/test --table emp
+--username hive -password hive --incremental lastmodified --merge-key employee_id 
+--check-column emp_timestamp
+--target-dir /sqoop/empdata/
+
+--incremental lastmodified will import the updated and new records from RDBMS (MySQL) database based on last latest value of emp_timestamp in Hive.
+
+--merge-key employee_id will "flatten" two datasets into one, taking the newest available records for each primary key (employee_id).
+
+Example:
+
+Let’s assume there 500k records are there in Hive table. In incremental load, we got 100k new employee records and 50k records are updated employee records.
+Above sqoop command will import 150K records and using Merge tool it will append new records (100k) and update the 50k records based on primary key (employee_id).
+
+https://dzone.com/articles/hive-incremental-update-using-sqoop
+
+https://community.hortonworks.com/questions/23896/is-it-possible-to-do-an-incremental-import-using-s-1.html
+
+https://community.hortonworks.com/articles/23602/sqoop-fetching-lot-of-tables-in-parallel.html
 
 

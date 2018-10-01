@@ -106,3 +106,34 @@ https://community.hortonworks.com/questions/23896/is-it-possible-to-do-an-increm
 https://community.hortonworks.com/articles/23602/sqoop-fetching-lot-of-tables-in-parallel.html
 
 
+sqoop import \
+  --connect jdbc:mysql://ms.itversity.com:3306/retail_db \
+  --username retail_user \
+  --password itversity \
+  --table orders \
+  --warehouse-dir /user/nikhilvemula/sqoop_import/retail_db/compression \
+  --num-mappers 4 \
+  --as-textfile \
+  --compress
+
+
+CREATE TABLE orders (
+order_id STRING,
+order_date STRING,
+order_customer_id STRING,
+order_status STRING )
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+
+LOAD DATA INPATH '/user/nikhilvemula/sqoop_import/retail_db/compression/orders' INTO table orders;
+
+http://www.hadooplessons.info/2017/07/loading-compressed-data-into-hive-table.html
+
+Hive also uncompresses the data automatically while running select query.
+
+https://stackoverflow.com/questions/49064376/how-can-i-insert-into-a-hive-table-with-parquet-fileformat-and-snappy-compressio?noredirect=1&lq=1
+
+http://hadooptutorial.info/enable-compression-in-hive/
+
+
+
